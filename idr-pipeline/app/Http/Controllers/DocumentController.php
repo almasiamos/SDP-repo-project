@@ -36,7 +36,7 @@ class DocumentController extends Controller
             'created_at' => now()->toDateTimeString(),
         ];
 
-        $artifactId = DB::connection('mongodb')->collection('documents')->insertGetId($document);
+        $artifactId = DB::connection('mongodb')->table('documents')->insertGetId($document);
         $artifactIdString = (string) $artifactId;
 
         // 4. Dispatch the embedding job to the queue
