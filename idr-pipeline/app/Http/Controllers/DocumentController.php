@@ -40,7 +40,8 @@ class DocumentController extends Controller
         $artifactIdString = (string) $artifactId;
 
         // 4. Dispatch the embedding job to the queue
-        ProcessDocumentEmbedding::dispatch($artifactIdString, $path);
+        $job = new ProcessDocumentEmbedding($artifactIdString, $path);
+        $job->handle();
 
         // 5. Return Success - 202 Accepted
         return response()->json([
@@ -59,33 +60,34 @@ class DocumentController extends Controller
     public function status($artifactId)
     {
         try {
-            // Fetch the document from MongoDB
-            $document = DB::connection('mongodb')->collection('documents')
-                ->where('_id', new ObjectId($artifactId))
-                ->first();
+        // Fetch the document from MongoDB (Pass the string directly)
+        $document = DB::connection('mongodb')->table('documents')
+            ->where('_id', $artifactId) 
+            ->first();
 
-            if (!$document) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Document not found'
-                ], 404);
-            }
-
-            // Return Success - 200 OK
-            return response()->json([
-                'status' => 'success',
-                'data' => [
-                    'artifactId' => (string) $document['_id'],
-                    'processingStatus' => $document['processingStatus'],
-                    'chunksProcessed' => $document['chunksProcessed'] ?? 0
-                ]
-            ], 200);
-
-        } catch (\Exception $e) {
+        if (!$document) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Invalid ID format or database error.'
-            ], 400);
+                'message' => 'Document not found'
+            ], 404);
         }
+
+        // Return Success - 200 OK
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'artifactId' => $artifactId,
+                'processingStatus' => $document->processingStatus,
+                'chunksProcessed' => $document->chunksProcessed ?? 0
+            ]
+        ], 200);
+
+    } catch (\Exception $e) {
+        // Reveal the exact system error for debugging
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage() 
+        ], 500);
+    }
     }
 }

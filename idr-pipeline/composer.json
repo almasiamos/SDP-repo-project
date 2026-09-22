@@ -8,11 +8,12 @@
     "require": {
         "php": "^8.2",
         "google-gemini-php/client": "^2.7",
+        "hkulekci/qdrant": "^1.0",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "mongodb/laravel-mongodb": "^5.11",
-        "spatie/pdf-to-text": "^1.54"
+        "smalot/pdfparser": "^2.12"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

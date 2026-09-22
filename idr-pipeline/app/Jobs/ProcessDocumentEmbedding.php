@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Spatie\PdfToText\Pdf;
+use Smalot\PdfParser\Parser;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -17,6 +17,7 @@ use Qdrant\Config;
 use Qdrant\Http\Builder;
 use Qdrant\Models\PointsStruct;
 use Qdrant\Models\PointStruct;
+use Qdrant\Models\VectorStruct;
 
 class ProcessDocumentEmbedding implements ShouldQueue
 {
@@ -34,20 +35,22 @@ class ProcessDocumentEmbedding implements ShouldQueue
     public function handle(): void
     {
         // 1. Update MongoDB status to PROCESSING
-        DB::connection('mongodb')->collection('documents')
+        DB::connection('mongodb')->table('documents')
             ->where('_id', $this->artifactId)
             ->update(['processingStatus' => 'PROCESSING']);
 
         try {
             // 2. Extract raw text from the PDF
-            $fullPath = storage_path('app/' . $this->filePath);
-            $text = (new Pdf())->setPdf($fullPath)->text();
+            $fullPath = \Illuminate\Support\Facades\Storage::path($this->filePath);
+            $parser = new Parser();
+            $pdf = $parser->parseFile($fullPath);
+            $text = $pdf->getText();
 
             // 3. Split text into semantic chunks
             $chunks = $this->chunkText($text, 500, 100);
 
             // 4. Initialize API Clients
-            $gemini = Gemini::client(env('GEMINI_API_KEY'));
+            $gemini = \Gemini::client(env('GEMINI_API_KEY'));
             
             $qdrantConfig = new Config(env('QDRANT_HOST'));
             $qdrantConfig->setApiKey(env('QDRANT_API_KEY'));
@@ -56,20 +59,24 @@ class ProcessDocumentEmbedding implements ShouldQueue
             // 5. Generate Embeddings and Structure Qdrant Points
             $points = new PointsStruct();
             
+            // app/Jobs/ProcessDocumentEmbedding.php (around line 61)
+
             foreach ($chunks as $index => $chunk) {
-                // Call Gemini text-embedding-004 model
-                $response = $gemini->embeddings()->embedContent($chunk);
+                // 1. Generate the embedding
+                $response = $gemini->embeddingModel('gemini-embedding-001') 
+                    ->embedContent($chunk);
+
                 $vector = $response->embedding->values;
 
-                // Create a point with a unique UUID, the vector mapped to 'content', and metadata
+                // 2. Create the point using VectorStruct and include 'text' in the payload
                 $points->addPoint(
                     new PointStruct(
                         (string) Str::uuid(),
-                        ['content' => $vector], 
+                        new VectorStruct($vector), 
                         [
                             'artifactId' => $this->artifactId,
                             'chunkIndex' => $index,
-                            'text' => $chunk 
+                            'text' => $chunk // Required by SearchController for relevantSnippets
                         ]
                     )
                 );
@@ -79,7 +86,7 @@ class ProcessDocumentEmbedding implements ShouldQueue
             $qdrant->collections('idr_documents')->points()->upsert($points);
 
             // 7. Update MongoDB status to EMBEDDED upon success
-            DB::connection('mongodb')->collection('documents')
+            DB::connection('mongodb')->table('documents')
                 ->where('_id', $this->artifactId)
                 ->update([
                     'processingStatus' => 'EMBEDDED',
@@ -89,9 +96,11 @@ class ProcessDocumentEmbedding implements ShouldQueue
         } catch (\Exception $e) {
             Log::error("Document processing failed for ID {$this->artifactId}: " . $e->getMessage());
             
-            DB::connection('mongodb')->collection('documents')
+            DB::connection('mongodb')->table('documents')
                 ->where('_id', $this->artifactId)
                 ->update(['processingStatus' => 'FAILED']);
+                
+            throw $e;
         }
     }
 

@@ -74,7 +74,7 @@ class SearchController extends Controller
             }
 
             // 5. Fetch Document Metadata from MongoDB
-            $documents = DB::connection('mongodb')->collection('documents')
+            $documents = DB::connection('mongodb')->table('documents')
                 ->whereIn('_id', array_unique($objectIds))
                 ->get()
                 ->keyBy(function($item) { 
