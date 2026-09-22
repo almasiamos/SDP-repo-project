@@ -1,0 +1,29 @@
+$kind: http-request
+description: ""
+url: http://127.0.0.1:8000/api/documents/upload
+method: POST
+body:
+  type: formdata
+  content:
+    - type: text
+      key: author
+      value: Dr. Smith
+      description: ""
+      disabled: false
+    - type: file
+      key: file
+      src:
+        - SIWES 2 REPORT.pdf
+      description: ""
+      disabled: false
+    - type: text
+      key: title
+      value: Sample ML Doc
+      description: ""
+      disabled: false
+    - type: text
+      key: uploaderId
+      value: user-123
+      description: ""
+      disabled: false
+order: 1790102396342

@@ -12,3 +12,4 @@ Route::get('/user', function (Request $request) {
 // IDR Document Upload & Status Polling
 Route::post('/documents/upload', [DocumentController::class, 'upload']);
 Route::get('/documents/{artifactId}/status', [DocumentController::class, 'status']);
+

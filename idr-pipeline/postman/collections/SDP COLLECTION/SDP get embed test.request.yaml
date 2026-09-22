@@ -1,0 +1,5 @@
+$kind: http-request
+description: ""
+url: http://127.0.0.1:8000/api/documents/6ab2c9bd0b365868610ea320/status
+method: GET
+order: 939193922193668

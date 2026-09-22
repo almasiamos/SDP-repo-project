@@ -28,9 +28,9 @@ class SearchController extends Controller
         $limit = $request->input('limit', 5);
 
         try {
-            // 2. Embed the user's query using Gemini
+            // 2. Embed the user's query using Gemini (must match the model used during indexing)
             $gemini = Gemini::client(env('GEMINI_API_KEY'));
-            $embeddingResponse = $gemini->embeddings()->embedContent($queryText);
+            $embeddingResponse = $gemini->embeddingModel('gemini-embedding-001')->embedContent($queryText);
             $queryVector = $embeddingResponse->embedding->values;
 
             // 3. Search Qdrant for the nearest vector chunks
