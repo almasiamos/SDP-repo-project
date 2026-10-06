@@ -1,0 +1,16 @@
+$kind: http-request
+description: ""
+url: http://127.0.0.1:8000/api/search?q=AITech&limit=5
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  - key: q
+    value: AITech
+    disabled: false
+    description: ""
+  - key: limit
+    value: "5"
+    disabled: false
+    description: ""
+order: 3879963766863055

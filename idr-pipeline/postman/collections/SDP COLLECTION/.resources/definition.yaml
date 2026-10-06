@@ -1,1 +1,11 @@
 $kind: collection
+variables:
+  - key: json_web_token_1558
+    secret: true
+    disabled: false
+    source:
+      provider: postman
+      postman:
+        type: cloud
+        secretId: 63f82b87-69cb-4b07-919e-1d7289fb01e7
+        vaultId: 6cda94fe-fce2-4977-97d5-db38e5e20de3

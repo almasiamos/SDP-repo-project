@@ -72,7 +72,7 @@ class ProcessDocumentEmbedding implements ShouldQueue
                 $points->addPoint(
                     new PointStruct(
                         (string) Str::uuid(),
-                        new VectorStruct($vector), 
+                        new VectorStruct($vector, 'content'), 
                         [
                             'artifactId' => $this->artifactId,
                             'chunkIndex' => $index,

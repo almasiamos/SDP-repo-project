@@ -1,0 +1,10 @@
+$kind: http-request
+description: ""
+url: https://244f2ac9-fba3-4cd5-8dd3-d3da5cb01fc2.eu-west-2-0.aws.cloud.qdrant.io:6333/collections/idr_documents/points/scroll
+method: POST
+headers:
+  api-key: "{{json_web_token_1558}}"
+body:
+  type: json
+  content: "{}"
+order: 4448048705651289

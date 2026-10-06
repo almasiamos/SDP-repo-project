@@ -13,3 +13,4 @@ Route::get('/user', function (Request $request) {
 Route::post('/documents/upload', [DocumentController::class, 'upload']);
 Route::get('/documents/{artifactId}/status', [DocumentController::class, 'status']);
 
+Route::get('/search', [SearchController::class, 'search']);

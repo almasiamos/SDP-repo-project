@@ -10,13 +10,14 @@ use Qdrant\Qdrant;
 use Qdrant\Config;
 use Qdrant\Http\Builder;
 use Qdrant\Models\Request\SearchRequest;
+use Qdrant\Models\VectorStruct;
 
 class SearchController extends Controller
 {
     /**
      * GET /api/search
      */
-    public function index(Request $request)
+    public function search(Request $request)
     {
         // 1. Validate the search query
         $request->validate([
@@ -38,7 +39,7 @@ class SearchController extends Controller
             $qdrantConfig->setApiKey(env('QDRANT_API_KEY'));
             $qdrant = new Qdrant((new Builder())->build($qdrantConfig));
 
-            $searchRequest = (new SearchRequest($queryVector))
+            $searchRequest = (new SearchRequest(new VectorStruct($queryVector, 'content')))
                 ->setLimit($limit)
                 ->setWithPayload(true); // Ensures we get the raw text and artifactId back
                 
@@ -78,7 +79,7 @@ class SearchController extends Controller
                 ->whereIn('_id', array_unique($objectIds))
                 ->get()
                 ->keyBy(function($item) { 
-                    return (string) $item['_id']; 
+                    return (string) $item->id; 
                 });
 
             // 6. Format the final output to match the API contract
@@ -87,7 +88,7 @@ class SearchController extends Controller
                 if (isset($documents[$artId])) {
                     $finalResults[] = [
                         'artifactId' => $artId,
-                        'title' => $documents[$artId]['title'] ?? 'Unknown Title',
+                        'title' => $documents[$artId]->title ?? 'Unknown Title',
                         'relevanceScore' => round($score, 4),
                         'relevantSnippets' => $documentSnippets[$artId]
                     ];
